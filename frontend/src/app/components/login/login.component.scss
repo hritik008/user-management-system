@@ -1,0 +1,111 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  padding: 20px;
+}
+
+mat-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+mat-card-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+mat-card-subtitle {
+  font-size: 14px;
+  color: #666;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.captcha-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.captcha-display {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  ::ng-deep svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  color: #c62828;
+  margin-bottom: 16px;
+  
+  mat-icon {
+    color: #c62828;
+  }
+}
+
+button[type="submit"] {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 8px;
+  
+  mat-spinner {
+    display: inline-block;
+    margin-right: 8px;
+  }
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-card {
+    padding: 16px;
+  }
+  
+  mat-card-title {
+    font-size: 24px;
+  }
+}

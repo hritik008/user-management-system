@@ -1,0 +1,191 @@
+<div class="dashboard-container">
+  <mat-toolbar color="primary">
+    <span>User Management System</span>
+    <span class="toolbar-spacer"></span>
+    <button mat-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+      <span>{{ currentUser?.username }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item disabled>
+        <mat-icon>badge</mat-icon>
+        <span>{{ currentUser?.role | titlecase }}</span>
+      </button>
+      <button mat-menu-item disabled>
+        <mat-icon>layers</mat-icon>
+        <span>Level {{ currentUser?.level }}</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <div class="content-wrapper">
+    <mat-sidenav-container>
+      <mat-sidenav mode="side" opened>
+        <mat-nav-list>
+          <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">
+            <mat-icon>dashboard</mat-icon>
+            <span>Dashboard</span>
+          </a>
+          <a mat-list-item routerLink="/users" routerLinkActive="active-link">
+            <mat-icon>people</mat-icon>
+            <span>Users</span>
+          </a>
+          <a mat-list-item routerLink="/hierarchy" routerLinkActive="active-link">
+            <mat-icon>account_tree</mat-icon>
+            <span>Hierarchy</span>
+          </a>
+          <a mat-list-item routerLink="/transactions" routerLinkActive="active-link">
+            <mat-icon>receipt_long</mat-icon>
+            <span>Transactions</span>
+          </a>
+          <a mat-list-item routerLink="/transfer" routerLinkActive="active-link">
+            <mat-icon>send</mat-icon>
+            <span>Transfer</span>
+          </a>
+          <a mat-list-item routerLink="/recharge" routerLinkActive="active-link" *ngIf="currentUser?.role === 'owner'">
+            <mat-icon>account_balance_wallet</mat-icon>
+            <span>Recharge</span>
+          </a>
+        </mat-nav-list>
+      </mat-sidenav>
+
+      <mat-sidenav-content>
+        <div class="main-content" *ngIf="!loading">
+          <!-- Balance Cards -->
+          <div class="cards-grid">
+            <mat-card class="stat-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="card-icon balance-icon">account_balance_wallet</mat-icon>
+                <mat-card-title>Current Balance</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <h2 class="stat-value">₹{{ balance | number:'1.2-2' }}</h2>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="card-icon commission-icon">paid</mat-icon>
+                <mat-card-title>Total Commission</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <h2 class="stat-value">₹{{ totalCommission | number:'1.2-2' }}</h2>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="card-icon users-icon">people</mat-icon>
+                <mat-card-title>Direct Children</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <h2 class="stat-value">{{ children.length }}</h2>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Recent Transactions -->
+          <mat-card class="transactions-card">
+            <mat-card-header>
+              <mat-card-title>Recent Transactions</mat-card-title>
+              <button mat-button color="primary" routerLink="/transactions">View All</button>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="transactions-list" *ngIf="recentTransactions.length > 0">
+                <div class="transaction-item" *ngFor="let transaction of recentTransactions" 
+                     [ngClass]="getTransactionClass(transaction)">
+                  <div class="transaction-icon">
+                    <mat-icon *ngIf="getTransactionAmount(transaction) >= 0">arrow_downward</mat-icon>
+                    <mat-icon *ngIf="getTransactionAmount(transaction) < 0">arrow_upward</mat-icon>
+                  </div>
+                  <div class="transaction-details">
+                    <div class="transaction-type">{{ getTransactionType(transaction) }}</div>
+                    <div class="transaction-desc">{{ transaction.description }}</div>
+                    <div class="transaction-date">{{ transaction.createdAt | date:'short' }}</div>
+                  </div>
+                  <div class="transaction-amount" [ngClass]="getTransactionClass(transaction)">
+                    {{ getTransactionAmount(transaction) >= 0 ? '+' : '' }}₹{{ getTransactionAmount(transaction) | number:'1.2-2' }}
+                  </div>
+                </div>
+              </div>
+              <div class="empty-state" *ngIf="recentTransactions.length === 0">
+                <mat-icon>inbox</mat-icon>
+                <p>No transactions yet</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Direct Children -->
+          <mat-card class="children-card">
+            <mat-card-header>
+              <mat-card-title>Direct Children</mat-card-title>
+              <button mat-button color="primary" routerLink="/users/create">Add New User</button>
+            </mat-card-header>
+            <mat-card-content>
+              <table mat-table [dataSource]="children" *ngIf="children.length > 0" class="full-width-table">
+                <ng-container matColumnDef="username">
+                  <th mat-header-cell *matHeaderCellDef>Username</th>
+                  <td mat-cell *matCellDef="let user">{{ user.username }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="email">
+                  <th mat-header-cell *matHeaderCellDef>Email</th>
+                  <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="level">
+                  <th mat-header-cell *matHeaderCellDef>Level</th>
+                  <td mat-cell *matCellDef="let user">{{ user.level }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="balance">
+                  <th mat-header-cell *matHeaderCellDef>Balance</th>
+                  <td mat-cell *matCellDef="let user">₹{{ user.balance | number:'1.2-2' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let user">
+                    <button mat-icon-button [matMenuTriggerFor]="menu">
+                      <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <mat-menu #menu="matMenu">
+                      <button mat-menu-item [routerLink]="['/users', user._id]">
+                        <mat-icon>visibility</mat-icon>
+                        <span>View Details</span>
+                      </button>
+                      <button mat-menu-item [routerLink]="['/transfer']" [queryParams]="{userId: user._id}">
+                        <mat-icon>send</mat-icon>
+                        <span>Transfer Balance</span>
+                      </button>
+                    </mat-menu>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="['username', 'email', 'level', 'balance', 'actions']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['username', 'email', 'level', 'balance', 'actions']"></tr>
+              </table>
+
+              <div class="empty-state" *ngIf="children.length === 0">
+                <mat-icon>people_outline</mat-icon>
+                <p>No children users yet</p>
+                <button mat-raised-button color="primary" routerLink="/users/create">Create First User</button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="loading-container" *ngIf="loading">
+          <mat-spinner></mat-spinner>
+          <p>Loading dashboard...</p>
+        </div>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </div>
+</div>
